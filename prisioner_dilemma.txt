@@ -1,0 +1,70 @@
+breed [players player]
+
+globals [payoff-matrix]
+
+players-own [
+  strategy
+  cumulative-profit
+]
+
+to setup
+  clear-all
+  set payoff-matrix [[2 0] [3 1]]
+  create-players num-players [
+    setxy random-xcor random-ycor
+    set strategy one-of [ "C" "D" ]
+    set cumulative-profit 0
+    set color ifelse-value (strategy = "C") [ blue ][ red ]
+  ]
+  reset-ticks
+end
+
+to go
+  ask players [
+    player-profit
+    player-strategy
+  ]
+  tick
+  if all? players [color = [color] of one-of players] [stop]
+end
+
+to player-profit
+  let opponent_strategy [strategy] of one-of players
+  let payoff get-profit strategy opponent_strategy
+  set cumulative-profit (cumulative-profit + payoff)
+ end
+
+to player-strategy
+  let rand random-float 1
+  if (rand < strategy-change-probability)[
+    let another one-of players
+    set strategy ifelse-value (cumulative-profit < [cumulative-profit] of another)[[strategy] of another][strategy]
+    set color ifelse-value (strategy = "C") [ blue ][ red ]
+    ]
+end
+
+to-report get-profit [player_strategy opponent_strategy]
+  let strategy_value_player strategy-value player_strategy
+  let strategy_value_opponent strategy-value opponent_strategy
+  report item strategy_value_opponent (item strategy_value_player payoff-matrix)
+end
+
+to-report strategy-value [p_strategy]
+  ifelse (p_strategy = "C") [report 0][report 1]
+end
+
+
+;1. Probability of Strategy Change = 0.1:
+;- With a low probability of strategy change, the agents are less likely to switch their strategies.
+;- The simulation may show relatively stable clusters of players with similar strategies.
+;- Over time, you might observe some minimal changes in strategy as a result of the low probability.
+;
+;2. Probability of Strategy Change = 0.5:
+;- A moderate probability of strategy change increases the likelihood of agents adopting more successful strategies from their neighbors.
+;- You may observe more dynamic changes in the distribution of strategies over time.
+;- Clusters of agents with the same strategy may break and merge as players adapt to more successful strategies.
+;
+;3. Probability of Strategy Change = 1:
+;- With a high probability of strategy change, the agents are very likely to adopt the strategy of a more successful neighbor.
+;- The simulation is expected to show frequent and rapid changes in strategy across the population.
+;- There may be a tendency for a homogeneous strategy to dominate the entire population over time.

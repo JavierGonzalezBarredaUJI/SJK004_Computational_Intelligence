@@ -1,0 +1,74 @@
+globals [
+  percent-similar
+  percent-unhappy
+]
+
+turtles-own [
+  happy?
+  similar-nearby
+  other-nearby
+  total-nearby
+]
+
+to setup
+  clear-all
+  set-default-shape turtles "house"
+  ask n-of participants patches [
+    sprout 1 [
+      set color one-of [55]
+      set size 1
+    ]
+  ]
+  ask n-of (participants / 2) turtles [set color 27]
+
+  update-turtles
+  update-globals
+  reset-ticks
+end
+
+
+to go
+  if all? turtles [ happy? ] [ stop ]
+  move-unhappy-turtles
+  update-turtles
+  update-globals
+  tick
+end
+
+
+to move-unhappy-turtles
+  ask turtles with [ not happy? ]
+    [ find-new-spot ]
+end
+
+
+to find-new-spot
+  rt random-float 360
+  fd random-float 10
+  if any? other turtles-here [ find-new-spot ] ; keep going until we find an unoccupied patch
+  move-to patch-here  ; move to center of patch
+end
+
+to update-turtles
+  ask turtles [
+    set similar-nearby count (turtles-on neighbors)  with [ color = [ color ] of myself ]
+    set other-nearby count (turtles-on neighbors) with [ color != [ color ] of myself ]
+    set total-nearby similar-nearby + other-nearby
+    set happy? similar-nearby >= (%-similar-neighbors * total-nearby / 100)
+  ]
+end
+
+to update-globals
+  let similar-neighbors sum [ similar-nearby ] of turtles
+  let total-neighbors sum [ total-nearby ] of turtles
+  set percent-similar (similar-neighbors / total-neighbors) * 100
+  set percent-unhappy (count turtles with [ not happy? ]) / (count turtles) * 100
+end
+
+
+;By increasing the number of participants in the simulation, I observed a significant impact on the overall segregation dynamics. 
+;With a larger population, the competition for desirable locations became more intense, leading to more frequent moves by dissatisfied agents.
+
+;After varying the minimum number of similar neighbors, lower values led to quicker satisfaction, but also resulted in clusters of similar 
+;agents forming more rapidly. Higher values, on the other hand, caused slower convergence, emphasizing the trade-off between individual 
+;preference and neighborhood homogeneity.
