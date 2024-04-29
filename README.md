@@ -1,0 +1,2 @@
+# SJK004_Computational_Intelligence
+Intelligent systems subject
